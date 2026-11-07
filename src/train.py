@@ -14,7 +14,7 @@ from transfer_model import build_transfer_model, unfreeze_last_block
 
 OUTPUT_DIR = Path("outputs")
 MODEL_DIR = Path("models")
-EPOCHS_BASELINE = 30
+EPOCHS_BASELINE = 50
 EPOCHS_STAGE1 = 15
 EPOCHS_STAGE2 = 15
 LR_BASELINE = 1e-3
@@ -26,16 +26,16 @@ def set_seeds(seed=SEED):
     tf.keras.utils.set_random_seed(seed)
 
 
-def get_callbacks(name):
+def get_callbacks(name,patience=5):
     return [
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss", patience=5, restore_best_weights=True, verbose=1
+            monitor="val_loss", patience=patience, restore_best_weights=True, verbose=1
         ),
         tf.keras.callbacks.ModelCheckpoint(
             MODEL_DIR / f"{name}.keras", monitor="val_loss", save_best_only=True, verbose=1
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss", factor=0.5, patience=2, min_lr=1e-7, verbose=1
+            monitor="val_loss", factor=0.5, patience=max(2, patience // 3), min_lr=1e-7, verbose=1
         ),
         tf.keras.callbacks.CSVLogger(OUTPUT_DIR / f"{name}_history.csv"),
     ]
@@ -100,7 +100,7 @@ def train_baseline():
     model = compile_baseline_cnn(build_baseline_cnn(), learning_rate=LR_BASELINE)
     history = model.fit(
         train_ds, validation_data=val_ds, epochs=EPOCHS_BASELINE,
-        callbacks=get_callbacks("baseline_cnn"),
+        callbacks=get_callbacks("baseline_cnn",patience=10),
     )
     model.load_weights(MODEL_DIR / "baseline_cnn.keras")
     return summarize("baseline_cnn", "Baseline CNN", model, history, val_ds)

@@ -6,15 +6,15 @@ def build_baseline_cnn(input_shape=(224, 224, 3)):
         layers.Input(shape=input_shape),
         
         layers.Conv2D(32, (3, 3), padding='same', activation='relu'),
-        layers.BatchNormalization(),
+        layers.BatchNormalization(momentum=0.9),
         layers.MaxPooling2D((2, 2)),
         
         layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
-        layers.BatchNormalization(),
+        layers.BatchNormalization(momentum=0.9),
         layers.MaxPooling2D((2, 2)),
         
         layers.Conv2D(128, (3, 3), padding='same', activation='relu'),
-        layers.BatchNormalization(),
+        layers.BatchNormalization(momentum=0.9),
         layers.MaxPooling2D((2, 2)),
         
         layers.GlobalAveragePooling2D(),

@@ -1,0 +1,11 @@
+{
+  "model": "baseline_cnn",
+  "best_epoch": 24,
+  "epochs_run": 34,
+  "best_val_loss": 0.4947805404663086,
+  "val_accuracy": 0.7629,
+  "val_auc": 0.8323,
+  "val_loss": 0.4948,
+  "val_precision": 0.7273,
+  "val_recall": 0.7442
+}

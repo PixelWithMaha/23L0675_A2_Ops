@@ -1,0 +1,7 @@
+model,split,threshold,accuracy,precision,recall,f1,roc_auc,real_called_fake,fake_called_real,tn,fp,fn,tp
+Baseline CNN,val,0.4,0.7732,0.7143,0.814,0.7609,0.8329,8,14,40,14,8,35
+Baseline CNN,test (threshold 0.5),0.5,0.6735,0.6364,0.6364,0.6364,0.7357,16,16,38,16,16,28
+Baseline CNN,test (chosen threshold),0.4,0.6633,0.6038,0.7273,0.6598,0.7357,12,21,33,21,12,32
+MobileNetV2 (fine-tuned),val,0.18,0.6907,0.5915,0.9767,0.7368,0.857,1,29,25,29,1,42
+MobileNetV2 (fine-tuned),test (threshold 0.5),0.5,0.7653,0.7059,0.8182,0.7579,0.8182,8,15,39,15,8,36
+MobileNetV2 (fine-tuned),test (chosen threshold),0.18,0.6633,0.5797,0.9091,0.708,0.8182,4,29,25,29,4,40
