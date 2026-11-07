@@ -3,3 +3,4 @@ visionguard_env/
 __pycache__/
 .DS_Store
 /models
+tuner_runs/

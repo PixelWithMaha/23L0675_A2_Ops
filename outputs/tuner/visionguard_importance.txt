@@ -1,0 +1,5 @@
+Effect of each setting (mean val_loss per value, lower is better):
+  learning_rate    spread 0.5005  ->  1e-05: 0.4691, 0.0001: 0.5092, 0.001: 0.9696
+  dropout          spread 0.3217  ->  0.2: 0.6956, 0.3: 0.9928, 0.5: 0.6712
+  unfrozen_blocks  spread 0.5871  ->  0: 0.4601, 1: 0.6150, 2: 0.8564, 3: 1.0472
+Setting that mattered most: unfrozen_blocks
