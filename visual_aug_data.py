@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from src.dataset import get_data_splits
 
 def save_augmented_batch_figure():
-    train_ds, _, _, class_names = get_data_splits("data")
+    train_ds, _, _, class_names = get_data_splits()
     
     for images, labels in train_ds.take(1):
         plt.figure(figsize=(9, 9))

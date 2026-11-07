@@ -1,0 +1,3 @@
+transfer_stage1: 1,281 trainable parameters
+Trainable layers:
+  head_output

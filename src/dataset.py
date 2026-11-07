@@ -43,12 +43,12 @@ def parse_image(file_path, label, normalize=True):
     return img, label
 
 
-def get_augmentation_layer():
+def get_augmentation_layer(value_range=(0, 1)):
     return tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal", seed=SEED),
         tf.keras.layers.RandomRotation(0.15, seed=SEED),
         tf.keras.layers.RandomZoom(0.1, seed=SEED),
-        tf.keras.layers.RandomContrast(0.1, value_range=(0, 1), seed=SEED),
+        tf.keras.layers.RandomContrast(0.1, value_range=value_range, seed=SEED),
     ], name="augmentation")
 
 
@@ -63,7 +63,7 @@ def build_pipeline(file_paths, labels, is_training=True, normalize=True, batch_s
     )
     dataset = dataset.batch(batch_size)
     if is_training:
-        augmenter = get_augmentation_layer()
+        augmenter = get_augmentation_layer((0, 1) if normalize else (0, 255))
         dataset = dataset.map(
             lambda x, y: (augmenter(x, training=True), y),
             num_parallel_calls=tf.data.AUTOTUNE,

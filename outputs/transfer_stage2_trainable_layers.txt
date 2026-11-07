@@ -1,0 +1,11 @@
+transfer_stage2: 887,361 trainable parameters
+Trainable layers:
+  mobilenetv2_1.00_224/block_16_expand
+  mobilenetv2_1.00_224/block_16_expand_BN
+  mobilenetv2_1.00_224/block_16_depthwise
+  mobilenetv2_1.00_224/block_16_depthwise_BN
+  mobilenetv2_1.00_224/block_16_project
+  mobilenetv2_1.00_224/block_16_project_BN
+  mobilenetv2_1.00_224/Conv_1
+  mobilenetv2_1.00_224/Conv_1_bn
+  head_output
