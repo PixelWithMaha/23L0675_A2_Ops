@@ -34,10 +34,10 @@ def read_split(name, split_dir=SPLIT_DIR):
     return df["filepath"].tolist(), df["label"].astype("int32").tolist()
 
 
-def parse_image(file_path, label, normalize=True):
+def parse_image(file_path, label, normalize=True, image_size=IMAGE_SIZE):
     img = tf.io.read_file(file_path)
     img = tf.io.decode_image(img, channels=3, expand_animations=False)
-    img = tf.image.resize(img, IMAGE_SIZE)
+    img = tf.image.resize(img, image_size)
     if normalize:
         img = img / 255.0
     return img, label
@@ -52,17 +52,18 @@ def get_augmentation_layer(value_range=(0, 1)):
     ], name="augmentation")
 
 
-def build_pipeline(file_paths, labels, is_training=True, normalize=True, batch_size=BATCH_SIZE):
+def build_pipeline(file_paths, labels, is_training=True, normalize=True, batch_size=BATCH_SIZE,
+                   image_size=IMAGE_SIZE, augment=True):
     dataset = tf.data.Dataset.from_tensor_slices((file_paths, labels))
     if is_training:
         dataset = dataset.shuffle(
             buffer_size=len(file_paths), seed=SEED, reshuffle_each_iteration=True
         )
     dataset = dataset.map(
-        lambda p, l: parse_image(p, l, normalize), num_parallel_calls=tf.data.AUTOTUNE
+        lambda p, l: parse_image(p, l, normalize, image_size), num_parallel_calls=tf.data.AUTOTUNE
     )
     dataset = dataset.batch(batch_size)
-    if is_training:
+    if is_training and augment:
         augmenter = get_augmentation_layer((0, 1) if normalize else (0, 255))
         dataset = dataset.map(
             lambda x, y: (augmenter(x, training=True), y),
@@ -71,14 +72,17 @@ def build_pipeline(file_paths, labels, is_training=True, normalize=True, batch_s
     return dataset.prefetch(tf.data.AUTOTUNE)
 
 
-def get_data_splits(normalize=True):
+def get_data_splits(normalize=True, image_size=IMAGE_SIZE, augment=True):
     if not (SPLIT_DIR / "train.csv").exists():
         create_splits()
     class_names = sorted(pd.read_csv(SPLIT_DIR / "train.csv")["class"].unique())
 
-    train_ds = build_pipeline(*read_split("train"), is_training=True, normalize=normalize)
-    val_ds = build_pipeline(*read_split("val"), is_training=False, normalize=normalize)
-    test_ds = build_pipeline(*read_split("test"), is_training=False, normalize=normalize)
+    train_ds = build_pipeline(*read_split("train"), is_training=True, normalize=normalize,
+                              image_size=image_size, augment=augment)
+    val_ds = build_pipeline(*read_split("val"), is_training=False, normalize=normalize,
+                            image_size=image_size)
+    test_ds = build_pipeline(*read_split("test"), is_training=False, normalize=normalize,
+                             image_size=image_size)
     return train_ds, val_ds, test_ds, class_names
 
 

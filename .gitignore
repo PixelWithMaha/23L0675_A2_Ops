@@ -4,3 +4,7 @@ __pycache__/
 .DS_Store
 /models
 tuner_runs/
+.env
+mlflow.db
+mlruns/
+mlartifacts/
