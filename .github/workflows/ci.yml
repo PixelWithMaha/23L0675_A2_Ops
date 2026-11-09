@@ -36,8 +36,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The champion model is versioned with DVC, not Git, so pull it from DagsHub.
-      # The username and token come from GitHub repository secrets, never from this file.
       - name: Pull champion model with DVC
         env:
           DAGSHUB_USER: ${{ secrets.DAGSHUB_USER }}

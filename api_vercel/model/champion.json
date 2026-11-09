@@ -1,0 +1,10 @@
+{
+  "model_name": "visionguard-classifier",
+  "alias": "champion",
+  "version": "2",
+  "run_id": "7c049979430b43b7abe6c7f7fd43c834",
+  "run_name": "mnv2-160px",
+  "model_type": "transfer",
+  "image_size": 160,
+  "test_auc": 0.8438552188552189
+}

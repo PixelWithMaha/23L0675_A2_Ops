@@ -43,7 +43,7 @@ class Classifier:
     def preprocess(self, image_bytes):
         return tf.expand_dims(preprocess(image_bytes, self.image_size, self.normalize), 0)
 
-    def predict(self, image_bytes):
+    def predict(self, image_bytes, filename=None):
         start = time.perf_counter()
         p_real = float(self.model(self.preprocess(image_bytes), training=False)[0][0])
         is_real = p_real >= self.threshold

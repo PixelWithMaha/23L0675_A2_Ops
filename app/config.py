@@ -16,3 +16,8 @@ class Config:
     ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "bmp", "gif"}
     HOST = os.getenv("HOST", "0.0.0.0")
     PORT = int(os.getenv("PORT", "5050"))
+
+    INFERENCE_MODE = os.getenv("INFERENCE_MODE", "local").lower()
+    MODEL_API_URL = os.getenv("MODEL_API_URL", "https://23l0675a2ops.vercel.app")
+    MODEL_API_KEY = os.getenv("MODEL_API_KEY", "")
+    MODEL_API_TIMEOUT = float(os.getenv("MODEL_API_TIMEOUT", "30"))

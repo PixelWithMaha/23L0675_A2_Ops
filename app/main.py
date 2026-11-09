@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 
 from app.config import Config
 from app.db import Database
-from app.inference import Classifier
+from app.remote import ModelAPIError
 
 DECODABLE_FORMATS = {"JPEG", "PNG", "BMP", "GIF"}
 
@@ -56,11 +56,15 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Loaded once at start-up and shared by every request
-    classifier = Classifier(Config.MODEL_PATH, Config.MODEL_META_PATH, Config.THRESHOLD)
+    if Config.INFERENCE_MODE == "remote":
+        from app.remote import RemoteClassifier
+        classifier = RemoteClassifier(Config.MODEL_API_URL, Config.MODEL_API_KEY, Config.MODEL_API_TIMEOUT)
+    else:
+        from app.inference import Classifier
+        classifier = Classifier(Config.MODEL_PATH, Config.MODEL_META_PATH, Config.THRESHOLD)
     db = Database(Config.DATABASE_URL)
-    app.logger.info("Model %s v%s loaded in %.1fs", classifier.model_name,
-                    classifier.model_version, classifier.load_seconds)
+    app.logger.info("Inference mode %s: model %s v%s ready in %.1fs", Config.INFERENCE_MODE,
+                    classifier.model_name, classifier.model_version, classifier.load_seconds)
 
     @app.context_processor
     def inject_model():
@@ -78,7 +82,11 @@ def create_app():
         except UploadError as err:
             return render_template("error.html", title=err.title, message=err.message), err.status
         try:
-            result = classifier.predict(data)
+            result = classifier.predict(data, filename)
+        except ModelAPIError as err:
+            app.logger.error("Model API error %s: %s", err.status, err.message)
+            status = err.status if 400 <= err.status < 500 else 502
+            return render_template("error.html", title="Model API error", message=err.message), status
         except Exception:
             app.logger.exception("Prediction failed")
             message = "The model could not read this image. Please try another file."
@@ -112,15 +120,19 @@ def create_app():
     @app.route("/health", methods=["GET"])
     def health():
         db_ok = db.is_up()
+        model_ok = Config.INFERENCE_MODE != "remote" or classifier.health() is not None
         body = {
-            "status": "ok" if db_ok else "degraded",
-            "model_loaded": True,
+            "status": "ok" if db_ok and model_ok else "degraded",
+            "inference_mode": Config.INFERENCE_MODE,
+            "model_loaded": model_ok,
             "model_name": classifier.model_name,
             "model_version": classifier.model_version,
             "threshold": classifier.threshold,
             "database": "ok" if db_ok else "unreachable",
         }
-        return jsonify(body), 200 if db_ok else 503
+        if Config.INFERENCE_MODE == "remote":
+            body["model_api"] = Config.MODEL_API_URL if model_ok else "unreachable"
+        return jsonify(body), 200 if db_ok and model_ok else 503
 
     @app.errorhandler(HTTPException)
     def http_error(err):
