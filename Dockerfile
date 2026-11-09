@@ -13,9 +13,9 @@ RUN pip install -r requirements-app.txt
 
 RUN useradd --create-home --uid 1000 appuser
 
-COPY app/ ./app/
-COPY models/champion.keras models/champion.json ./models/
-RUN mkdir -p instance && chown -R appuser:appuser /app
+COPY --chown=appuser:appuser app/ ./app/
+COPY --chown=appuser:appuser models/champion.keras models/champion.json ./models/
+RUN mkdir -p instance && chown appuser:appuser /app /app/instance
 
 USER appuser
 
