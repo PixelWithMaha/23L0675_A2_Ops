@@ -81,8 +81,8 @@ def create_app():
             result = classifier.predict(data)
         except Exception:
             app.logger.exception("Prediction failed")
-            return render_template("error.html", title="Image could not be decoded",
-                                   message="The model could not read this image. Please try another file."), 400
+            message = "The model could not read this image. Please try another file."
+            return render_template("error.html", title="Image could not be decoded", message=message), 400
 
         row = db.add(
             filename=filename,

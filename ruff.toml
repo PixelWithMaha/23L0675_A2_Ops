@@ -1,0 +1,6 @@
+# Linting settings used locally and in GitHub Actions
+line-length = 110
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W"]  # pycodestyle errors/warnings + pyflakes (unused imports, undefined names)

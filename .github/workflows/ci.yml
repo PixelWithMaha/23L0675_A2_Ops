@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-app.txt
+          pip install pytest ruff pandas scikit-learn
+
+      - name: Lint (ruff)
+        run: ruff check app tests scripts
+
+      - name: Tests (pytest)
+        run: python -m pytest -q tests
+
+  docker-build:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The champion model is versioned with DVC, not Git, so pull it from DagsHub.
+      # The username and token come from GitHub repository secrets, never from this file.
+      - name: Pull champion model with DVC
+        env:
+          DAGSHUB_USER: ${{ secrets.DAGSHUB_USER }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          pip install dvc
+          dvc remote modify origin --local auth basic
+          dvc remote modify origin --local user "$DAGSHUB_USER"
+          dvc remote modify origin --local password "$DAGSHUB_TOKEN"
+          dvc pull models.dvc
+          ls -lh models
+
+      - name: Build Docker image
+        run: docker build -t 23l0675_a2_ops:ci .
