@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}History{% endblock %}
 {% block content %}
-<section class="card">
+<section class="card fade-in">
+  <p class="kicker">Database trail</p>
   <h1>Prediction history</h1>
   <p class="muted">Every analysed image is logged: what was decided, when, by which model, and how confidently. The images themselves are not stored.</p>
   {% if rows %}
@@ -12,21 +13,21 @@
       </thead>
       <tbody>
         {% for r in rows %}
-        <tr>
-          <td><a href="{{ url_for('result', prediction_id=r.id) }}">{{ r.id }}</a></td>
-          <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <tr data-href="{{ url_for('result', prediction_id=r.id) }}" style="--i: {{ loop.index0 }}">
+          <td class="num"><a href="{{ url_for('result', prediction_id=r.id) }}">{{ r.id }}</a></td>
+          <td class="num">{{ r.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <td class="file">{{ r.filename }}</td>
-          <td><span class="pill {{ 'real' if r.label == 'RealArt' else 'ai' }}">{{ 'Real' if r.label == 'RealArt' else 'AI-generated' }}</span></td>
-          <td>{{ '%.1f' | format(r.confidence * 100) }}%</td>
-          <td>{{ '%.3f' | format(r.p_real) }}</td>
-          <td>{{ r.model_name }} v{{ r.model_version }}</td>
+          <td><span class="pill {{ 'real' if r.label == 'RealArt' else 'ai' }}">{{ 'REAL' if r.label == 'RealArt' else 'AI-GENERATED' }}</span></td>
+          <td class="num">{{ '%.1f' | format(r.confidence * 100) }}%</td>
+          <td class="num">{{ '%.3f' | format(r.p_real) }}</td>
+          <td><span class="model-tag {{ 'cloud' if '@vercel' in r.model_name }}">{{ r.model_name }} v{{ r.model_version }}</span></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% else %}
-  <p>No predictions yet. <a href="{{ url_for('upload') }}">Upload an image</a> to get started.</p>
+  <p>No predictions yet. <a href="{{ url_for('upload') }}">Analyse an image</a> to get started.</p>
   {% endif %}
 </section>
 {% endblock %}

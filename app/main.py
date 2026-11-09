@@ -6,7 +6,7 @@ import base64
 import hashlib
 import io
 
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, abort, jsonify, render_template, request, url_for
 from PIL import Image, UnidentifiedImageError
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
@@ -16,6 +16,16 @@ from app.db import Database
 from app.remote import ModelAPIError
 
 DECODABLE_FORMATS = {"JPEG", "PNG", "BMP", "GIF"}
+
+
+def wants_json():
+    return request.headers.get("X-Requested-With") == "fetch"
+
+
+def fail(status, title, message):
+    if wants_json():
+        return jsonify({"title": title, "message": message}), status
+    return render_template("error.html", title=title, message=message), status
 
 
 class UploadError(Exception):
@@ -80,17 +90,17 @@ def create_app():
         try:
             filename, data = validate_upload(request.files.get("image"))  # may raise 413 (too large)
         except UploadError as err:
-            return render_template("error.html", title=err.title, message=err.message), err.status
+            return fail(err.status, err.title, err.message)
         try:
             result = classifier.predict(data, filename)
         except ModelAPIError as err:
             app.logger.error("Model API error %s: %s", err.status, err.message)
             status = err.status if 400 <= err.status < 500 else 502
-            return render_template("error.html", title="Model API error", message=err.message), status
+            return fail(status, "Model API error", err.message)
         except Exception:
             app.logger.exception("Prediction failed")
             message = "The model could not read this image. Please try another file."
-            return render_template("error.html", title="Image could not be decoded", message=message), 400
+            return fail(400, "Image could not be decoded", message)
 
         row = db.add(
             filename=filename,
@@ -103,15 +113,17 @@ def create_app():
             model_version=classifier.model_version,
             latency_ms=result["latency_ms"],
         )
+        if wants_json():
+            return jsonify({"id": row.id, "url": url_for("result", prediction_id=row.id, fresh=1)})
         preview = f"data:image/*;base64,{base64.b64encode(data).decode()}"  # shown once, never saved
-        return render_template("result.html", p=row, preview=preview)
+        return render_template("result.html", p=row, preview=preview, fresh=True)
 
     @app.route("/result/<int:prediction_id>", methods=["GET"])
     def result(prediction_id):
         row = db.get(prediction_id)
         if row is None:
             abort(404)
-        return render_template("result.html", p=row, preview=None)
+        return render_template("result.html", p=row, preview=None, fresh=request.args.get("fresh") == "1")
 
     @app.route("/history", methods=["GET"])
     def history():
@@ -142,13 +154,12 @@ def create_app():
             413: ("File too large", f"Images must be {Config.MAX_UPLOAD_MB:g} MB or smaller."),
         }
         title, message = messages.get(err.code, (err.name, err.description))
-        return render_template("error.html", title=title, message=message), err.code
+        return fail(err.code, title, message)
 
     @app.errorhandler(Exception)
     def server_error(err):
         app.logger.exception("Unhandled error")
-        return render_template("error.html", title="Something went wrong",
-                               message="An unexpected error occurred. Please try again."), 500
+        return fail(500, "Something went wrong", "An unexpected error occurred. Please try again.")
 
     return app
 

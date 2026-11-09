@@ -2,28 +2,46 @@
 {% block title %}Result{% endblock %}
 {% block content %}
 {% set is_real = p.label == 'RealArt' %}
-<section class="card result">
-  {% if preview %}<img class="preview" src="{{ preview }}" alt="Uploaded image">{% endif %}
-  <div>
-    <p class="muted">{{ p.filename }}</p>
-    <h1 class="verdict {{ 'real' if is_real else 'ai' }}">
-      {{ 'Likely REAL' if is_real else 'Likely AI-GENERATED' }}
-    </h1>
-    <p class="confidence">Confidence: <strong>{{ '%.1f' | format(p.confidence * 100) }}%</strong></p>
-    <div class="bar"><div class="fill {{ 'real' if is_real else 'ai' }}" style="width: {{ (p.confidence * 100) | round(1) }}%"></div></div>
-
-    <div class="caveat">
-      <strong>Please read:</strong> this is an automated estimate, not proof. The model was trained on
-      fewer than 1,000 images and was wrong on about 1 in 4 test images. It is often fooled by paintings,
-      illustrations, screenshots and heavily edited photos, and it can be wrong even when it sounds confident.
+{% set kind = 'real' if is_real else 'ai' %}
+{% set likely = p.confidence < 0.6 %}
+{% set word = ('Likely ' if likely else '') ~ ('Real' if is_real else 'AI-generated') %}
+{% set pct = '%.0f' | format(p.confidence * 100) %}
+<section class="result">
+  <div class="card fade-in" style="padding: 14px">
+    <div class="result-stage lens-stage {{ 'shake' if fresh }}" id="result-stage" data-lens="result"
+         data-kind="{{ kind }}" data-label="{{ word | upper }} · {{ pct }}%" data-id="{{ p.id }}">
+      {% if preview %}
+        <img class="base" src="{{ preview }}" alt="Uploaded image">
+      {% else %}
+        <div class="no-image" id="no-image">IMAGE NOT STORED<br>uploads are kept in memory only (privacy)</div>
+      {% endif %}
+      <div class="stamp {{ kind }} {{ 'likely' if likely }} {{ 'slam' if fresh }}">
+        <span class="stamp-word">{{ word }}</span>
+        <span class="stamp-sub">CONFIDENCE {{ pct }}%</span>
+      </div>
     </div>
+    <p class="lens-hint" id="lens-hint" hidden>Hover the image to scan it with the detector lens</p>
+  </div>
 
-    <p class="meta">
-      Model {{ p.model_name }} v{{ p.model_version }} · threshold {{ p.threshold }} ·
-      P(Real) = {{ '%.4f' | format(p.p_real) }} · {{ '%.0f' | format(p.latency_ms) }} ms ·
-      {{ p.created_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC · record #{{ p.id }}
-    </p>
+  <div class="card verdict-panel fade-in" style="animation-delay: 0.15s">
+    <p class="kicker">Verdict · record #{{ p.id }}</p>
+    <p class="muted" style="margin:0; overflow:hidden; text-overflow:ellipsis">{{ p.filename }}</p>
+    <h1 class="verdict {{ kind }}">{{ 'Likely REAL' if is_real else 'Likely AI-GENERATED' }}</h1>
+    <div class="big-number"><span class="count-up" data-target="{{ (p.confidence * 100) | round(1) }}">{{ '%.1f' | format(p.confidence * 100) }}</span>%</div>
+    <span class="muted" style="font-size:0.85rem">confidence</span>
+    <div class="bar"><div class="fill {{ kind }}" data-width="{{ (p.confidence * 100) | round(1) }}"></div></div>
+
+    <p class="caveat-line">Estimate, not proof · ~78% accurate on test images · often fooled by paintings and edited photos</p>
+
+    <div class="meta-grid">
+      <span>model</span><b>{{ p.model_name }} v{{ p.model_version }}</b>
+      <span>P(real)</span><b>{{ '%.4f' | format(p.p_real) }}</b>
+      <span>threshold</span><b>{{ p.threshold }}</b>
+      <span>latency</span><b>{{ '%.0f' | format(p.latency_ms) }} ms</b>
+      <span>time</span><b>{{ p.created_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</b>
+    </div>
     <a class="btn" href="{{ url_for('upload') }}">Analyse another image</a>
+    <a class="btn ghost" href="{{ url_for('history') }}">History</a>
   </div>
 </section>
 {% endblock %}

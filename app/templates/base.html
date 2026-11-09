@@ -4,22 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}VisionGuard{% endblock %} · VisionGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <canvas id="bg-flow" aria-hidden="true"></canvas>
+  <svg class="svg-defs" aria-hidden="true">
+    <filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="3" result="blotch"/>
+      <feColorMatrix in="blotch" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.4 2.1" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="in"/>
+    </filter>
+  </svg>
+
   <header class="topbar">
-    <a class="brand" href="{{ url_for('upload') }}">🛡️ VisionGuard</a>
+    <a class="brand" href="{{ url_for('upload') }}"><span class="brand-mark"></span>VisionGuard</a>
     <nav>
-      <a href="{{ url_for('upload') }}" class="{{ 'active' if request.endpoint == 'upload' }}">Upload</a>
+      <a href="{{ url_for('upload') }}" class="{{ 'active' if request.endpoint == 'upload' }}">Detect</a>
       <a href="{{ url_for('history') }}" class="{{ 'active' if request.endpoint == 'history' }}">History</a>
       <a href="{{ url_for('health') }}">Health</a>
     </nav>
   </header>
+
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+
   <footer class="footer">
-    Model: {{ model_name }} v{{ model_version }} · 23L0675_A2_Ops
+    MODEL {{ model_name | upper }} V{{ model_version }} · 23L0675_A2_OPS
   </footer>
+  <script src="{{ url_for('static', filename='vg.js') }}" defer></script>
 </body>
 </html>

@@ -1,19 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Upload{% endblock %}
+{% block title %}Detect{% endblock %}
 {% block content %}
-<section class="card">
-  <h1>Is this image AI-generated or real?</h1>
-  <p class="muted">Upload an image and VisionGuard will estimate whether it was made by a generative AI model or is a real photo / artwork.</p>
+<section class="sort-section" id="sort-section">
+  <div class="sort-sticky">
+    <div class="sort-copy">
+      <p class="kicker">AI vs real image detector</p>
+      <h1>Every image goes<br>into one of <span class="ai">two</span> <span class="real">bins</span>.</h1>
+      <p>Scroll to watch VisionGuard break each specimen apart and sort it as <span class="ai">AI-generated</span> or <span class="real">real</span>. Then upload your own.</p>
+      <div class="sort-dots" id="sort-dots"><span></span><span></span></div>
+      <a class="skip-link" href="#analyse">Skip to the detector ↓</a>
+    </div>
+    <div class="sort-stage" id="sort-stage"
+         data-images="{{ url_for('static', filename='demo/1_ai.jpg') }}|ai,{{ url_for('static', filename='demo/2_real.jpg') }}|real">
+      <div class="sort-frame" id="sort-frame"></div>
+      <div class="bins">
+        <div class="bin ai" id="bin-ai"><span class="bin-icon"></span><span class="bin-name">AI bin</span><span class="bin-count" id="count-ai">0</span></div>
+        <div class="bin real" id="bin-real"><span class="bin-icon"></span><span class="bin-name">Real bin</span><span class="bin-count" id="count-real">0</span></div>
+      </div>
+      <canvas id="sort-canvas"></canvas>
+    </div>
+  </div>
+</section>
 
-  <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" class="upload-form">
-    <label class="dropzone">
-      <input type="file" name="image" accept=".jpg,.jpeg,.png,.bmp,.gif" required
-             onchange="this.closest('label').querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Choose an image'">
-      <span>Choose an image</span>
+<section class="card upload-card fade-in" id="analyse">
+  <form id="upload-form" action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data">
+    <p class="kicker">Step 1 · Upload</p>
+    <h2>Analyse your image</h2>
+    <label class="dropzone" id="dropzone">
+      <input type="file" name="image" id="file-input" accept=".jpg,.jpeg,.png,.bmp,.gif" required>
+      <span class="icon">↑</span>
+      <span><strong>Drop an image here</strong> or click to browse</span>
+      <span class="hint">{{ allowed | join(', ') }} · max {{ '%g' | format(max_mb) }} MB</span>
     </label>
-    <button type="submit" class="btn">Analyse image</button>
+    <div class="form-actions">
+      <button type="submit" class="btn" id="analyse-btn">Analyse image</button>
+      <span class="file-name" id="file-name">No file chosen</span>
+    </div>
+    <div class="inline-error" id="inline-error"><strong></strong><span></span></div>
+    <p class="hint">Images are analysed in memory and never stored on the server.</p>
   </form>
-
-  <p class="hint">Allowed: {{ allowed | join(', ') }} · Max {{ max_mb | round(1) }} MB · Images are analysed in memory and never stored.</p>
+  <div>
+    <p class="kicker">Step 2 · Scan</p>
+    <div class="preview-box" id="preview-box">
+      <span class="empty">AWAITING SPECIMEN</span>
+      <div class="preview-inner">
+        <img id="preview-img" alt="Selected image">
+        <canvas id="scan-canvas"></canvas>
+      </div>
+      <span class="scan-status" id="scan-status"></span>
+    </div>
+  </div>
 </section>
 {% endblock %}
