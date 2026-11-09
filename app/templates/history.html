@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Prediction history</h1>
+  <p class="muted">Every analysed image is logged: what was decided, when, by which model, and how confidently. The images themselves are not stored.</p>
+  {% if rows %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Time (UTC)</th><th>File</th><th>Decision</th><th>Confidence</th><th>P(Real)</th><th>Model</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><a href="{{ url_for('result', prediction_id=r.id) }}">{{ r.id }}</a></td>
+          <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td class="file">{{ r.filename }}</td>
+          <td><span class="pill {{ 'real' if r.label == 'RealArt' else 'ai' }}">{{ 'Real' if r.label == 'RealArt' else 'AI-generated' }}</span></td>
+          <td>{{ '%.1f' | format(r.confidence * 100) }}%</td>
+          <td>{{ '%.3f' | format(r.p_real) }}</td>
+          <td>{{ r.model_name }} v{{ r.model_version }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>No predictions yet. <a href="{{ url_for('upload') }}">Upload an image</a> to get started.</p>
+  {% endif %}
+</section>
+{% endblock %}

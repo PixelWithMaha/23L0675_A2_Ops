@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Upload{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Is this image AI-generated or real?</h1>
+  <p class="muted">Upload an image and VisionGuard will estimate whether it was made by a generative AI model or is a real photo / artwork.</p>
+
+  <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" class="upload-form">
+    <label class="dropzone">
+      <input type="file" name="image" accept=".jpg,.jpeg,.png,.bmp,.gif" required
+             onchange="this.closest('label').querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Choose an image'">
+      <span>Choose an image</span>
+    </label>
+    <button type="submit" class="btn">Analyse image</button>
+  </form>
+
+  <p class="hint">Allowed: {{ allowed | join(', ') }} · Max {{ max_mb | round(1) }} MB · Images are analysed in memory and never stored.</p>
+</section>
+{% endblock %}

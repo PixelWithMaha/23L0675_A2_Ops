@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="card error">
+  <h1>⚠️ {{ title }}</h1>
+  <p>{{ message }}</p>
+  <a class="btn" href="{{ url_for('upload') }}">Back to upload</a>
+</section>
+{% endblock %}
